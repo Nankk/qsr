@@ -9,3 +9,8 @@
    (println db/default-db)
    db/default-db))
 
+(re-frame/reg-event-db
+  ::set-sheets-values
+  (fn [db [_ vs]]
+    (println (str "Data received: " vs))
+    (assoc db :sheet-values vs)))

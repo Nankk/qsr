@@ -7,3 +7,8 @@
   ::name
   (fn [db _]
     (db :name)))
+
+(re-frame/reg-sub
+  ::chan
+  (fn [db _]
+    (db :async-chan)))
