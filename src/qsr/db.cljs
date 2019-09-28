@@ -2,5 +2,5 @@
 
 (def default-db
   {:name "re-frame"
-   :sheet-values []})
+   :items []})
 

@@ -9,6 +9,6 @@
     (db :name)))
 
 (re-frame/reg-sub
-  ::chan
+  ::items
   (fn [db _]
-    (db :async-chan)))
+    (db :items)))
