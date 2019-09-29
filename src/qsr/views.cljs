@@ -6,16 +6,30 @@
    [qsr.events :as events]
    [qsr.db :as db]
    [clojure.string :as str]
-   [qsr.gapis :as gapis]))
+   [qsr.gapis :as gapis]
+   [cljs-http.client :as http]))
 
 ;; Item panel ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn post-request [request]
+  (println "post-request called")
+  (println request)
+  (http/post request))
+
+(defn on-item-click [item]
+  ;; (re-frame/dispatch-sync [::events/select-item item])
+  (let [api-url "https://vrcpanorama-get-image.herokuapp.com/index.php"
+        req-url (str api-url "?type=move&page=" (item :index))]
+    (post-request req-url)))
+
 (defn item-card [item]
-  [:div {:class "card" :margin "20px"}
-   [:img {:class "card-img-top" :style {:width "100%" :object-fit "cover"} :src (item :url) :alt (item :name)}]
-   [:div {:class "card-body"}
-    [:p (str "Index: " (item :index))]
-    [:p (str "Drive ID:" (item :id))]]])
+  [:button {:class "transparent" :on-click #(on-item-click item)}
+   [:div {:class "card"}
+    [:img {:class "card-img-top" :style {:width "100%" :object-fit "cover"} :src (item :url) :alt (item :name)}]
+    [:div {:class "card-body"}
+     [:p (str "Index: " (item :index))]
+     [:p (str "Drive ID:" (item :id))]]]]
+  )
 
 (defn item-list-row [pair] ; TODO: change to accept arbitrary number of items
   (println (first pair))
@@ -44,15 +58,17 @@
 ;; Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn main-panel []
-  [:div.large-container
-   [:h1 "Hi I am Main Panel."]
-   [:button {:class "btn btn-primary"
-             :on-click #(gapis/get-values-from-sheet
-                         "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
-                         "Default!A:A")}
-    [:i {:class "fas fa-sync-alt" :aria-hidden true}]
-    " Refresh"]
-   [item-list]])
+  (let [refresh-fn #(gapis/get-values-from-sheet
+                     "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
+                     "Default!A:A")]
+    (refresh-fn)
+    [:div.large-container
+     [:h1 "Hi I am Main Panel."]
+     [:button {:class "btn btn-primary"
+               :on-click refresh-fn}
+      [:i {:class "fas fa-sync-alt" :aria-hidden true}]
+      " Refresh"]
+     [item-list]]))
 
 
 

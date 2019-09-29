@@ -7,6 +7,7 @@
   [re-view/re-frame-simple "0.1.4"]
   [org.clojure/test.check "0.10.0-alpha4"]
   [binaryage/devtools "0.9.7"]
+  [cljs-http "0.1.46"]
   ;; [org.clojure/core.async "0.4.500"]
   ]
 
