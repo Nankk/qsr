@@ -11,7 +11,7 @@
 ;; Item panel ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn item-card [item]
-  [:div {:class "card"}
+  [:div {:class "card" :margin "20px"}
    [:img {:class "card-img-top" :style {:width "100%" :object-fit "cover"} :src (item :url) :alt (item :name)}]
    [:div {:class "card-body"}
     [:p (str "Index: " (item :index))]
@@ -22,8 +22,7 @@
   [:div.row
    [:div {:class "col-sm-6"} [item-card (first pair)]]
    (when (some? (second pair))
-     [:div {:class "col-sm-6"} [item-card (second pair)]])
-   ])
+     [:div {:class "col-sm-6"} [item-card (second pair)]])])
 
 (defn item-list []
   [:div.container
@@ -51,8 +50,8 @@
              :on-click #(gapis/get-values-from-sheet
                          "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
                          "Default!A:A")}
-    [:i {:class "fas fa-sync-alt" :aria-hidden true :margin-right "1rem"}]
-    "Refresh"]
+    [:i {:class "fas fa-sync-alt" :aria-hidden true}]
+    " Refresh"]
    [item-list]])
 
 
