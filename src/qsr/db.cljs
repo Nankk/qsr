@@ -2,5 +2,6 @@
 
 (def default-db
   {:name "re-frame"
-   :items []})
+   :items []
+   :selected-item nil})
 

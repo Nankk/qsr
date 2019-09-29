@@ -8,27 +8,51 @@
    [clojure.string :as str]
    [qsr.gapis :as gapis]))
 
+;; Item panel ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn item-card [item]
   [:div {:class "card"}
-   [:img {:class "card-img-top" :src (item :url) :alt (item :name)}]
+   [:img {:class "card-img-top" :style {:width "100%" :object-fit "cover"} :src (item :url) :alt (item :name)}]
    [:div {:class "card-body"}
-    [:p (item :name)]]])
+    [:p (str "Index: " (item :index))]
+    [:p (str "Drive ID:" (item :id))]]])
+
+(defn item-list-row [pair] ; TODO: change to accept arbitrary number of items
+  (println (first pair))
+  [:div.row
+   [:div {:class "col-sm-6"} [item-card (first pair)]]
+   (when (some? (second pair))
+     [:div {:class "col-sm-6"} [item-card (second pair)]])
+   ])
 
 (defn item-list []
-  (let [items @(re-frame/subscribe [::subs/items])]
-    [:div (for [item items]
-            ^{:key item} [item-card item])]))
+  [:div.container
+   (let [items @(re-frame/subscribe [::subs/items])
+         pairs (loop [queue items
+                      item-pairs []]
+                 (println (str "queue: " queue))
+                 (println (str "item-pairs: " item-pairs))
+                 (if (not-empty queue)
+                   (recur (if (= (count queue) 1)
+                            (conj queue nil)
+                            (subvec queue 2))
+                          (conj item-pairs [(first queue) (second queue)]))
+                   item-pairs))]
+     (println pairs)
+     (for [pair pairs]
+       [item-list-row pair]))])
 
 ;; Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn main-panel []
   [:div.large-container
    [:h1 "Hi I am Main Panel."]
-   [:div {:class "btn btn-warning"
-          :on-click #(gapis/get-values-from-sheet
-                      "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
-                      "Default!A:A")}
-    "DANGER NEVER CLICK THIS"]
+   [:button {:class "btn btn-primary"
+             :on-click #(gapis/get-values-from-sheet
+                         "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
+                         "Default!A:A")}
+    [:i {:class "fas fa-sync-alt" :aria-hidden true :margin-right "1rem"}]
+    "Refresh"]
    [item-list]])
 
 
