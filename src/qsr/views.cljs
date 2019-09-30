@@ -7,67 +7,74 @@
    [qsr.db :as db]
    [clojure.string :as str]
    [qsr.gapis :as gapis]
-   [cljs-http.client :as http]))
+   [cljs-http.client :as http]
+   [cljs.core.async :as async :refer [go >! <!]]))
 
 ;; Item panel ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn post-request [request]
-  (println "post-request called")
-  (println request)
-  (http/post request))
-
 (defn on-item-click [item]
-  ;; (re-frame/dispatch-sync [::events/select-item item])
+  (re-frame/dispatch-sync [::events/select-item item])
   (let [api-url "https://vrcpanorama-get-image.herokuapp.com/index.php"
         req-url (str api-url "?type=move&page=" (item :index))]
-    (post-request req-url)))
+    (go (http/get req-url))))
 
 (defn item-card [item]
   [:button {:class "transparent" :on-click #(on-item-click item)}
-   [:div {:class "card"}
+   [:div {:class (str "card hoverable" (when (item :selected?) " selected"))}
     [:img {:class "card-img-top" :style {:width "100%" :object-fit "cover"} :src (item :url) :alt (item :name)}]
     [:div {:class "card-body"}
-     [:p (str "Index: " (item :index))]
-     [:p (str "Drive ID:" (item :id))]]]]
-  )
+     [:p
+      (str "Index: " (item :index))
+      [:br]
+      (str "Drive ID:" (item :id))]]]])
 
 (defn item-list-row [pair] ; TODO: change to accept arbitrary number of items
-  (println (first pair))
   [:div.row
-   [:div {:class "col-sm-6"} [item-card (first pair)]]
+   [:div {:class "col-md-6"} [item-card (first pair)]]
    (when (some? (second pair))
-     [:div {:class "col-sm-6"} [item-card (second pair)]])])
+     [:div {:class "col-md-6"} [item-card (second pair)]])])
 
 (defn item-list []
-  [:div.container
+  [:div
    (let [items @(re-frame/subscribe [::subs/items])
          pairs (loop [queue items
                       item-pairs []]
-                 (println (str "queue: " queue))
-                 (println (str "item-pairs: " item-pairs))
                  (if (not-empty queue)
-                   (recur (if (= (count queue) 1)
-                            (conj queue nil)
-                            (subvec queue 2))
-                          (conj item-pairs [(first queue) (second queue)]))
+                   (let [new-queue (if (= (count queue) 1)
+                                     (conj queue nil)
+                                     (subvec queue 2))]
+                     (recur (if (= (count queue) 1)
+                              []
+                              (subvec queue 2))
+                            (conj item-pairs [(first queue) (second queue)])))
                    item-pairs))]
-     (println pairs)
      (for [pair pairs]
-       [item-list-row pair]))])
+       ^{:key pair} [item-list-row pair]))])
 
 ;; Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn greeting []
+  (let [hr-now (. (js/Date.) getHours)]
+    (cond
+      (< hr-now 5) "Hi, hard-worker ;-)"
+      (= hr-now 5) "The sun is raising..."
+      (< 5 hr-now 11) "Good morning Sir/Ma'am, how are you doing?"
+      (= hr-now 11) "Lunch is around the corner."
+      (< 11 hr-now 18) "Hello Sir/Ma'am, how are you doing?"
+      (= hr-now 18) "Shall we take a break?"
+      (< 18 hr-now 24) "Good evening, Sir/Ma'am."
+      (= hr-now 24) "You'd better go to bed for tommorow, right?")))
 (defn main-panel []
   (let [refresh-fn #(gapis/get-values-from-sheet
                      "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
                      "Default!A:A")]
     (refresh-fn)
-    [:div.large-container
-     [:h1 "Hi I am Main Panel."]
+    [:div.container
+     [:h3 (greeting)]
      [:button {:class "btn btn-primary"
                :on-click refresh-fn}
       [:i {:class "fas fa-sync-alt" :aria-hidden true}]
-      " Refresh"]
+      " Sync"]
      [item-list]]))
 
 

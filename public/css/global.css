@@ -6,8 +6,19 @@
 }
 
 .card {
-    margin-top: 20px;
-    border-radius:0.3rem!important
+    margin-top: 2rem;
+    border-radius:0.3rem!important;
+    width: "100%"!important;
+    min-width: 0px;
+    min-height: 0px;
+}
+
+.card-img-top {
+    width: "100%"!important;
+}
+
+.card-body {
+    width: "100%"!important;
 }
 
 button.transparent {
@@ -16,6 +27,18 @@ button.transparent {
     text-align: left;
     border: none;
     cursor:pointer;
-    overflow: hidden;
+    overflow: visible;
     outline:none;
+}
+
+.hoverable:hover {
+    box-shadow: 0 0px 20px rgba(0, 63, 255, .5);
+    transition: all 0.3s;
+}
+
+.selected {
+    border: solid 1px;
+    background-color: rgb(232, 240, 254);
+    color: rgb(31, 120, 227);
+    font-weight: bold;
 }
