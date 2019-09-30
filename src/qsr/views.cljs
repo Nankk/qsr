@@ -25,8 +25,9 @@
     [:div {:class "card-body"}
      [:p
       (str "Index: " (item :index))
-      [:br]
-      (str "Drive ID:" (item :id))]]]])
+      ;; [:br]
+      ;; (str "Drive ID:" (item :id))
+      ]]]])
 
 (defn item-list-row [pair] ; TODO: change to accept arbitrary number of items
   [:div.row

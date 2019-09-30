@@ -8,17 +8,14 @@
 .card {
     margin-top: 2rem;
     border-radius:0.3rem!important;
-    width: "100%"!important;
+    width: "100%";
     min-width: 0px;
     min-height: 0px;
 }
 
 .card-img-top {
-    width: "100%"!important;
-}
-
-.card-body {
-    width: "100%"!important;
+    width: "100%";
+    height: auto;
 }
 
 button.transparent {
