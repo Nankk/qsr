@@ -5,15 +5,19 @@
     padding-bottom: 2rem;
 }
 
+
 .card {
     margin-top: 2rem;
     border-radius:0.3rem!important;
     width: "100%";
-    min-width: 0px;
-    min-height: 0px;
+    min-width: 30vw;
+    min-height: 20hw;
 }
 
 .card-img-top {
+    background: url("../img/blank.gif");
+    background-repeat:no-repeat;
+    background-position: center center;
     width: "100%";
     height: auto;
 }

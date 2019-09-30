@@ -21,13 +21,11 @@
 (defn item-card [item]
   [:button {:class "transparent" :on-click #(on-item-click item)}
    [:div {:class (str "card hoverable" (when (item :selected?) " selected"))}
-    [:img {:class "card-img-top" :style {:width "100%" :object-fit "cover"} :src (item :url) :alt (item :name)}]
+    [:img {:data-sizes "auto"
+           :data-src (item :url)
+           :class "card-img-top lazyload"}]
     [:div {:class "card-body"}
-     [:p
-      (str "Index: " (item :index))
-      ;; [:br]
-      ;; (str "Drive ID:" (item :id))
-      ]]]])
+     [:p (str "Index: " (item :index))]]]])
 
 (defn item-list-row [pair] ; TODO: change to accept arbitrary number of items
   [:div.row
