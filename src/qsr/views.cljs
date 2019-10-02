@@ -8,14 +8,15 @@
    [clojure.string :as str]
    [qsr.gapis :as gapis]
    [cljs-http.client :as http]
-   [cljs.core.async :as async :refer [chan go go-loop >! <!]]))
+   [cljs.core.async :as async :refer [chan go go-loop >! <!]]
+   [qsr.const :as const]))
 
 ;; Item panel ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn on-item-click [item]
   (re-frame/dispatch-sync [::events/select-item item])
   (let [api-url "https://vrcpanorama-get-image.herokuapp.com/index.php"
-        req-url (str api-url "?type=move&page=" (item :index))]
+        req-url (str api-url "?type=move&page=" (item :idx))]
     (go (http/get req-url))))
 
 (defn item-card [item]
@@ -25,15 +26,17 @@
            :data-src (item :url)
            :class "card-img-top lazyload"}]
     [:div {:class "card-body"}
-     (str "Index: " (item :index))
+     (str "Sheet index: " (item :sheet-idx))
      [:br]
      (str "Name: " (item :name))]]])
 
 (defn item-list-row [pair] ; TODO: change to accept arbitrary number of items
-  [:div.row
-   [:div {:class "col-md-6"} [item-card (first pair)]]
-   (when (some? (second pair))
-     [:div {:class "col-md-6"} [item-card (second pair)]])])
+  (let [left (first pair)
+        right (second pair)]
+    [:div.row
+     [:div {:key (left :id) :class "col-md-6"} [item-card left]]
+     (when (some? right)
+       [:div {:key (right :id) :class "col-md-6"} [item-card right]])]))
 
 (defn item-list []
   [:div
@@ -54,18 +57,6 @@
 
 ;; Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn greeting []
-  (let [hr-now (. (js/Date.) getHours)]
-    (cond
-      (< hr-now 5) "Hi, hard-worker ;-)"
-      (= hr-now 5) "The sun is raising..."
-      (< 5 hr-now 11) "Good morning Sir/Ma'am, how are you doing?"
-      (= hr-now 11) "Lunch is around the corner."
-      (< 11 hr-now 18) "Hello Sir/Ma'am, how are you doing?"
-      (= hr-now 18) "Shall we take a break?"
-      (< 18 hr-now 24) "Good evening, Sir/Ma'am."
-      (= hr-now 24) "You'd better go to bed for tommorow, right?")))
-
 (def gapi-ch (chan))
 
 (defn formatted-sheets-data [vs]
@@ -74,7 +65,7 @@
                             (let [url-raw (first v)
                                   img-id (second (re-matches #".*file/d/([^/]+).*" url-raw))]
                               {:id img-id
-                               :index i
+                               :sheet-idx i
                                :url (str "https://drive.google.com/uc?export=view&id=" img-id)}))
                           vs-sub))))
 
@@ -106,7 +97,7 @@
    "Default!A:A"
    (fn [err res]
      (when err (throw err))
-     (. js/console log "Got values from sheet.")
+     (. js/console log "got values from sheet.")
      (let [vs (js->clj (.. res -data -values))]
        (go (>! gapi-ch {:type :sheets :content vs})))))
   (gapis/get-items-in-directory
@@ -115,17 +106,59 @@
    "files(name, id)"
    (fn [err res]
      (when err (throw err))
-     (. js/console log "Got items in directory.")
+     (. js/console log "got items in directory.")
      (let [vs (js->clj (.. res -data -files))]
        (go (>! gapi-ch {:type :drive :content vs}))))))
 
+(defn dropdown-sort-by []
+  [:span {:class "dropdown"}
+   [:button {:class         "btn btn-light dropdown-toggle"
+             :data-toggle   "dropdown"
+             :aria-haspopup true
+             :aria-expanded false}
+    (name @(re-frame/subscribe [::subs/sort-by]))]
+   [:div {:class           "dropdown-menu"
+          :aria-labelledby "dropdown1"}
+    (for [by [:sheet-idx :name]]
+      [:button {:key      by
+                :class    "dropdown-item"
+                :on-click (fn [_]
+                            (re-frame/dispatch-sync [::events/set-sort-by by])
+                            (re-frame/dispatch-sync [::events/sort-items]))}
+       (name by)])]])
+
+(defn dropdown-sort-order []
+  [:span {:class "dropdown"}
+   [:button {:class         "btn btn-light dropdown-toggle"
+             :data-toggle   "dropdown"
+             :aria-haspopup true
+             :aria-expanded false}
+    (name @(re-frame/subscribe [::subs/sort-order]))]
+   [:div {:class           "dropdown-menu"
+          :aria-labelledby "dropdown2"}
+    (for [order [:ascending :descending]]
+      [:button {:key      order
+                :class    "dropdown-item"
+                :on-click (fn [_]
+                            (re-frame/dispatch-sync [::events/set-sort-order order])
+                            (re-frame/dispatch-sync [::events/sort-items]))}
+       (name order)])]])
+
 (defn main-panel []
   (refresh)
-  [:div.container
-   [:h3 (greeting)]
-   [:button {:class "btn btn-primary"
-             :on-click #(refresh)}
-    [:i {:class "fas fa-sync-alt" :aria-hidden true}]
-    " Sync"]
+  [:div {:class "container"}
+   [:h3 (const/random-word)]
+   [:div {:class "card"}
+    [:div {:class "card-body"}
+     [:button {:class "btn btn-primary"
+               :on-click #(refresh)}
+      [:i {:class "fas fa-sync-alt" :aria-hidden true}]
+      "　Reload sheet data"]]
+    [:div {:class "card-body"}
+     "Sort by　"
+     [dropdown-sort-by]
+     "　in　"
+     [dropdown-sort-order]
+     "　order"]]
    [item-list]])
 

@@ -13,3 +13,12 @@
   (fn [db _]
     (db :items)))
 
+(re-frame/reg-sub
+  ::sort-by
+  (fn [db _]
+    (db :sort-by)))
+
+(re-frame/reg-sub
+  ::sort-order
+  (fn [db _]
+    (db :sort-order)))

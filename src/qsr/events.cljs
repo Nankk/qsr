@@ -22,3 +22,24 @@
   ::set-items
   (fn [db [_ items]]
     (assoc db :items items)))
+
+(re-frame/reg-event-db
+  ::set-sort-by
+  (fn [db [_ by]]
+    (assoc db :sort-by by)))
+
+(re-frame/reg-event-db
+  ::set-sort-order
+  (fn [db [_ order]]
+    (assoc db :sort-order order)))
+
+(re-frame/reg-event-db
+  ::sort-items
+  (fn [db _]
+    (print "Hey it's me, sort-items")
+    ;; db
+    (let [sorted-items (sort-by (db :sort-by) (db :items))]
+      (assoc db :items
+             (case (db :sort-order)
+               :ascending (into [] sorted-items)
+               :descending (into [] (reverse sorted-items)))))))
