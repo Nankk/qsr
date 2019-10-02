@@ -12,35 +12,24 @@
 ;; Authentication & api initialization
 (def scopes #js ["https://www.googleapis.com/auth/drive"])
 (def auth (JWT. (embedded/credentials :client_email) nil (embedded/credentials :private_key) scopes))
-(def sheets (let [constructor (. google-sheets/sheets_v4 -Sheets)]
-              (constructor. (js-obj "version" "v4" "auth" auth))))
 
 ; Sheets
-(defn sheets-callback [err res]
-  (when err (throw err))
-  (let [vs (js->clj (.. res -data -values))]
-    (println (str "sheets-callback received: " vs))
-    (re-frame/dispatch-sync [::events/set-items vs])))
-(defn get-values-from-sheet [sheet-id range]
+(def sheets (let [constructor (. google-sheets/sheets_v4 -Sheets)]
+              (constructor. (js-obj "version" "v4" "auth" auth))))
+(defn get-values-from-sheet [sheet-id range callback-fn]
   (let [params (clj->js {:spreadsheetId sheet-id
                          :range range})
-        cbf sheets-callback]
+        cbf callback-fn]
     (. (.. sheets -spreadsheets -values) get params cbf)))
 
 ;; Drive
 (def drive (let [constructor (. google-drive/drive_v3 -Drive)]
              (constructor. (js-obj "version" "v3" "auth" auth))))
-(defn drive-callback [err res]
-  (when err (throw err))
-  (let [files (.. res -data -files)]
-    (doseq [file files]
-      (. js/console log file))))
-(defn get-items-in-directory [dir-id page-size fields]
+(defn get-items-in-directory [dir-id page-size fields callback-fn]
   (let [params (clj->js {:q (str "'" dir-id "' in parents")
                          :pageSize page-size
-                         :fields fields
-                         })
-        cbf drive-callback
+                         :fields fields})
+        cbf callback-fn
         files (. drive -files)]
     (. files list params cbf))
   0)

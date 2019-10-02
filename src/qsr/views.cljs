@@ -8,7 +8,7 @@
    [clojure.string :as str]
    [qsr.gapis :as gapis]
    [cljs-http.client :as http]
-   [cljs.core.async :as async :refer [go >! <!]]))
+   [cljs.core.async :as async :refer [chan go go-loop >! <!]]))
 
 ;; Item panel ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -25,7 +25,9 @@
            :data-src (item :url)
            :class "card-img-top lazyload"}]
     [:div {:class "card-body"}
-     [:p (str "Index: " (item :index))]]]])
+     (str "Index: " (item :index))
+     [:br]
+     (str "Name: " (item :name))]]])
 
 (defn item-list-row [pair] ; TODO: change to accept arbitrary number of items
   [:div.row
@@ -63,18 +65,67 @@
       (= hr-now 18) "Shall we take a break?"
       (< 18 hr-now 24) "Good evening, Sir/Ma'am."
       (= hr-now 24) "You'd better go to bed for tommorow, right?")))
+
+(def gapi-ch (chan))
+
+(defn formatted-sheets-data [vs]
+  (let [vs-sub (subvec vs 3)]
+    (into [] (map-indexed (fn [i v]
+                            (let [url-raw (first v)
+                                  img-id (second (re-matches #".*file/d/([^/]+).*" url-raw))]
+                              {:id img-id
+                               :index i
+                               :url (str "https://drive.google.com/uc?export=view&id=" img-id)}))
+                          vs-sub))))
+
+(defn formatted-drive-data [vs]
+  (into [] (for [v vs]
+             {:id   (get v "id")
+              :name (get v "name")})))
+
+(defn items [rs]
+  (let [s-vs (formatted-sheets-data (rs :sheets))
+        d-vs (formatted-drive-data (rs :drive))]
+    (into [] (for [s-v s-vs]
+               (let [idx (first (keep-indexed (fn [i v] (when (= (v :id) (s-v :id)) i)) d-vs))]
+                 (assoc s-v :name (get-in d-vs [idx :name])))))))
+
+(go-loop [rs {}]
+  (when-let [r (<! gapi-ch)]
+    (let [new-rs (assoc rs (r :type) (r :content))]
+      (if (and (contains? new-rs :drive)
+               (contains? new-rs :sheets))
+        (do (println "gonna set-items!")
+            (re-frame/dispatch-sync [::events/set-items (items new-rs)])
+            (recur {}))
+        (recur new-rs)))))
+
+(defn refresh []
+  (gapis/get-values-from-sheet
+   "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
+   "Default!A:A"
+   (fn [err res]
+     (when err (throw err))
+     (. js/console log "Got values from sheet.")
+     (let [vs (js->clj (.. res -data -values))]
+       (go (>! gapi-ch {:type :sheets :content vs})))))
+  (gapis/get-items-in-directory
+   "1V86RuISEWxMeg8vIuKz190oBNEJIxNq0"
+   1000
+   "files(name, id)"
+   (fn [err res]
+     (when err (throw err))
+     (. js/console log "Got items in directory.")
+     (let [vs (js->clj (.. res -data -files))]
+       (go (>! gapi-ch {:type :drive :content vs}))))))
+
 (defn main-panel []
-  (let [refresh-fn #(gapis/get-values-from-sheet
-                     "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
-                     "Default!A:A")]
-    (refresh-fn)
-    [:div.container
-     [:h3 (greeting)]
-     [:button {:class "btn btn-primary"
-               :on-click refresh-fn}
-      [:i {:class "fas fa-sync-alt" :aria-hidden true}]
-      " Sync"]
-     [item-list]]))
-
-
+  (refresh)
+  [:div.container
+   [:h3 (greeting)]
+   [:button {:class "btn btn-primary"
+             :on-click #(refresh)}
+    [:i {:class "fas fa-sync-alt" :aria-hidden true}]
+    " Sync"]
+   [item-list]])
 
