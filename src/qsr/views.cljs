@@ -20,40 +20,22 @@
     (go (http/get req-url))))
 
 (defn item-card [item]
-  [:button {:class "transparent" :on-click #(on-item-click item)}
-   [:div {:class (str "card hoverable" (when (item :selected?) " selected"))}
-    [:img {:data-sizes "auto"
-           :data-src (item :url)
-           :class "card-img-top lazyload"}]
-    [:div {:class "card-body"}
-     (str "Sheet index: " (item :sheet-idx))
-     [:br]
-     (str "Name: " (item :name))]]])
-
-(defn item-list-row [pair] ; TODO: change to accept arbitrary number of items
-  (let [left (first pair)
-        right (second pair)]
-    [:div.row
-     [:div {:key (left :id) :class "col-md-6"} [item-card left]]
-     (when (some? right)
-       [:div {:key (right :id) :class "col-md-6"} [item-card right]])]))
+  [:li
+   [:button {:class "transparent" :on-click #(on-item-click item)}
+    [:div {:class (str "card hoverable" (when (item :selected?) " selected"))}
+     [:img {:data-sizes "auto"
+            :data-src (item :url)
+            :class "card-img-top lazyload"}]
+     [:div {:class "card-body"}
+      (str "sheet index: " (item :sheet-idx))
+      [:br]
+      (str "name: " (item :name))]]]])
 
 (defn item-list []
-  [:div
-   (let [items @(re-frame/subscribe [::subs/items])
-         pairs (loop [queue items
-                      item-pairs []]
-                 (if (not-empty queue)
-                   (let [new-queue (if (= (count queue) 1)
-                                     (conj queue nil)
-                                     (subvec queue 2))]
-                     (recur (if (= (count queue) 1)
-                              []
-                              (subvec queue 2))
-                            (conj item-pairs [(first queue) (second queue)])))
-                   item-pairs))]
-     (for [pair pairs]
-       ^{:key pair} [item-list-row pair]))])
+  [:ul {:class "wrap-list"}
+   (let [items @(re-frame/subscribe [::subs/items])]
+     (for [item items]
+       ^{:key item} [item-card item]))])
 
 ;; Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -147,7 +129,7 @@
 (defn main-panel []
   (refresh)
   [:div {:class "container"}
-   [:h3 (const/random-word)]
+   [:h3 {:style {:text-align "center"}} (const/random-word)]
    [:div {:class "card"}
     [:div {:class "card-body"}
      [:button {:class "btn btn-primary"

@@ -6,11 +6,10 @@
 }
 
 .card {
-    margin-top: 2rem;
+    margin-top: 1.5rem;
     border-radius:0.3rem!important;
     width: "100%";
-    min-width: 20vw;
-    min-height: 20hw;
+    height: "auto";
 }
 
 .card-img-top {
@@ -19,6 +18,18 @@
     background-position: center center;
     width: "100%";
     height: auto;
+}
+
+ul.wrap-list {
+    display: flex;
+    flex-wrap: wrap;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul.wrap-list li {
+    width: 360px;
 }
 
 button.transparent {
