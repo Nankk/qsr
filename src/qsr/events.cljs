@@ -36,8 +36,6 @@
 (re-frame/reg-event-db
   ::sort-items
   (fn [db _]
-    (print "Hey it's me, sort-items")
-    ;; db
     (let [sorted-items (sort-by (db :sort-by) (db :items))]
       (assoc db :items
              (case (db :sort-order)

@@ -16,7 +16,7 @@
 (defn on-item-click [item]
   (re-frame/dispatch-sync [::events/select-item item])
   (let [api-url "https://vrcpanorama-get-image.herokuapp.com/index.php"
-        req-url (str api-url "?type=move&page=" (item :idx))]
+        req-url (str api-url "?type=move&page=" (item :sheet-idx))]
     (go (http/get req-url))))
 
 (defn item-card [item]
