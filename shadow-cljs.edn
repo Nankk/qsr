@@ -14,6 +14,8 @@
  :source-paths
  ["src"]
 
+ :js-options {:js-package-dirs ["node_modules" "modules"]}
+
  :builds {:app {:target :browser
                 :modules {:main {:init-fn qsr.core/init}}
                 :output-dir "public/js/compiled"
