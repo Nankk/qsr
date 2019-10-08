@@ -1,7 +1,8 @@
 (ns qsr.events
   (:require
    [re-frame.core :as re-frame]
-   [qsr.db :as db]))
+   [qsr.db :as db]
+   [qsr.util :as util]))
 
 (re-frame/reg-event-db
  ::initialize-db
@@ -48,4 +49,4 @@
     (let [from (from-to 0)
           to (from-to 1)]
       (-> db
-          (update :items #(into [] (assoc % to (% from) from (% to))))))))
+          (update :items #(vec (util/shift-from-to % from to)))))))
