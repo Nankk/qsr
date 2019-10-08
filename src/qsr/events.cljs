@@ -41,3 +41,11 @@
              (case (db :sort-order)
                :ascending (into [] sorted-items)
                :descending (into [] (reverse sorted-items)))))))
+
+(re-frame/reg-event-db
+  ::on-manually-sorted
+  (fn [db [_ from-to]]
+    (let [from (from-to 0)
+          to (from-to 1)]
+      (-> db
+          (update :items #(into [] (assoc % to (% from) from (% to))))))))

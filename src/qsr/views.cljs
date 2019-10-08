@@ -32,7 +32,8 @@
       (str "name: " (item :name))]]]])
 
 (defn item-list []
-  [:ul {:class "wrap-list"}
+  [:ul {:id "item-list"
+        :class "wrap-list"}
    (let [items @(re-frame/subscribe [::subs/items])]
      (for [item items]
        ^{:key item} [item-card item]))])
