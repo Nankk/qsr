@@ -20,7 +20,9 @@
   (Sortable. (.getElementById js/document "item-list")
              (clj->js {:group "g1"
                        :animation 200
-                       :onEnd (fn [e]
+                       :delay 200
+                       :delay-on-touch-only true
+                       :on-end (fn [e]
                                 (let [old (. e -oldIndex)
                                       new (. e -newIndex)
                                       from-to [old new]]
