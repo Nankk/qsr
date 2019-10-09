@@ -147,10 +147,28 @@
                             (re-frame/dispatch-sync [::events/sort-items]))}
        (name order)])]])
 
+(defn tip-card []
+  [:div {:class "card"
+         :style {:overflow "hidden"
+                 :background-color "#FFF9F0"}}
+   [:div {:class "row no-gutters"}
+    [:div {:class "col-md-1"
+           :style {:background-color "#FFC938"
+                   :text-align "center"}}
+     [:div {:style {:color "#FFFFFF"
+                    :padding-top "1rem"
+                    :font-size "2rem"}}
+      [:i {:class "far fa-lightbulb"
+           :aria-hidden true}]]]
+    [:div {:class "col-md-11"}
+     [:div {:class "card-body"}
+      [:h5 {:class "card-title"} "今日のTip"]
+      [:p {:class "card-text"} (const/random-tip)]]]]])
+
 (defn main-panel []
   (refresh)
   [:div {:class "container"}
-   [:h3 {:style {:text-align "center"}} (const/random-word)]
+   [tip-card]
    [:div {:class "card"}
     [:div {:class "card-body"}
      [:span
