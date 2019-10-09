@@ -11,12 +11,17 @@
    db/default-db))
 
 (re-frame/reg-event-db
+  ::initialized
+  (fn [db _]
+    (assoc db :initialized? true)))
+
+(re-frame/reg-event-db
  ::select-item
  (fn [db [_ item]]
    (let [items (db :items)
          select-idx (first (keep-indexed #(when (= (%2 :id) (item :id)) %1) items))
          unselected-db (update db :items (fn [item]
-                                           (into [] (map #(assoc % :selected? false) item))))]
+                                           (vec (map #(assoc % :selected? false) item))))]
      (update-in unselected-db [:items select-idx :selected?] #(constantly true)))))
 
 (re-frame/reg-event-db
@@ -40,8 +45,8 @@
     (let [sorted-items (sort-by (db :sort-by) (db :items))]
       (assoc db :items
              (case (db :sort-order)
-               :ascending (into [] sorted-items)
-               :descending (into [] (reverse sorted-items)))))))
+               :ascending (vec sorted-items)
+               :descending (vec (reverse sorted-items)))))))
 
 (re-frame/reg-event-db
   ::on-manually-sorted
@@ -50,3 +55,4 @@
           to (from-to 1)]
       (-> db
           (update :items #(vec (util/shift-from-to % from to)))))))
+

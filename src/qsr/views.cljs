@@ -71,6 +71,7 @@
                (contains? new-rs :sheets))
         (do (println "gonna set-items!")
             (re-frame/dispatch-sync [::events/set-items (items new-rs)])
+            (re-frame/dispatch-sync [::events/initialized])
             (recur {}))
         (recur new-rs)))))
 
@@ -92,6 +93,25 @@
      (. js/console log "got items in directory.")
      (let [vs (js->clj (.. res -data -files))]
        (go (>! gapi-ch {:type :drive :content vs}))))))
+
+(defn update-values-in-sheet []
+  (println "Updating sheet...")
+  (let [items @(re-frame/subscribe [::subs/items])]
+    (gapis/update-values-in-sheet
+     "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
+     "Default!A2"
+     [[(count items)]]
+     (fn [err res]
+       (when err (throw err))
+       (println "Slides count updated.")))
+    (gapis/update-values-in-sheet
+     "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
+     (str "Default!A4:A" (+ 3 (count items)))
+     (vec (for [item items]
+            [(str "https://drive.google.com/file/d/" (item :id) "/view?usp=sharing")]))
+     (fn [err res]
+       (when err (throw err))
+       (println "Slides urls updated.")))))
 
 (defn dropdown-sort-by []
   [:span {:class "dropdown"}
@@ -133,10 +153,15 @@
    [:h3 {:style {:text-align "center"}} (const/random-word)]
    [:div {:class "card"}
     [:div {:class "card-body"}
-     [:button {:class "btn btn-primary"
-               :on-click #(refresh)}
-      [:i {:class "fas fa-sync-alt" :aria-hidden true}]
-      "　Reload sheet data"]]
+     [:span
+      [:button {:class "btn btn-primary"
+                :on-click #(refresh)}
+       [:i {:class "fas fa-sync-alt" :aria-hidden true}]
+       "　Reload sheet data"]
+      [:button {:class "btn btn-primary"
+                :on-click #(update-values-in-sheet)}
+       [:i {:class "fas fa-save" :aria-hidden true}]
+       "　Save to sheets"]]]
     [:div {:class "card-body"}
      "Sort by　"
      [dropdown-sort-by]

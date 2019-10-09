@@ -19,7 +19,7 @@
 (defn sortable-init []
   (Sortable. (.getElementById js/document "item-list")
              (clj->js {:group "g1"
-                       :animation 200
+                       :animation 50
                        :delay 150
                        :delayOnTouchOnly true
                        :onEnd (fn [e]
