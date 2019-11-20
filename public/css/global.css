@@ -108,6 +108,12 @@ hr {
 
 /* ;; */
 
+.opacity-wrapper {
+    -webkit-transition: opacity 1s linear;
+    transition: opacity 1s linear;
+    opacity: 1;
+}
+
 .loading-indicator {
     z-index: 1;
     margin: 0 0 0.5rem;
@@ -124,10 +130,6 @@ hr {
     display: inline-block;
     text-align: center;
     vertical-align: center;
-
-    transition-property: opacity;
-    transition-duration: 1s;
-    opacity: 1;
 }
 
 .lds-ring {

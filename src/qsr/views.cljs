@@ -245,15 +245,15 @@
 
 (defn- loading-indicator []
   (let [r? @(re-frame/subscribe [::subs/reflecting?])]
-    [:div.loading-indicator {:style {:opacity (if r? 1 0)
-                                     :background-color (if r? "#eeeeee" "#22BBFF")}}
-     [:div.vert-wrapper
-      [:div.logo
-       [:div.lds-ring
-        [:div]
-        [:div]
-        [:div]]
-       (if r? "Posting..." "Done!")]]]))
+    [:div.opacity-wrapper {:style {:opacity (if r? 1 0)}}
+     [:div.loading-indicator {:style {:background-color (if r? "#eeeeee" "#22BBFF")}}
+      [:div.vert-wrapper
+       [:div.logo
+        [:div.lds-ring
+         [:div]
+         [:div]
+         [:div]]
+        (if r? "Posting..." "Done!")]]]]))
 
 (defn main-panel []
   [:div
