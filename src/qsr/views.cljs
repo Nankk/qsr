@@ -11,13 +11,65 @@
    [cljs.core.async :as async :refer [chan go go-loop >! <!]]
    [qsr.const :as const]))
 
-;; Item panel ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; File uploader ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def drop-area-id "drop-area")
+
+ ; for now just showing dropped items to the console
+
+(defn handle-drag-over [e]
+  (. e stopPropagation)
+  (. e preventDefault)
+  (set! (.. e -dataTransfer -dropEffect) "copy"))
+
+(defn upload-files [files]
+  (doseq [file files]
+    (gapis/upload-file "1V86RuISEWxMeg8vIuKz190oBNEJIxNq0" file #())))
+
+(defn drop-area []
+  [:div {:class "container"}
+   [:div {:class "row"}
+    [:div {:class "col-sm-2"}]
+    [:div {:class "col-sm-8"}
+     [:div {:class "card"}
+      [:div {:class "card-body"}
+       [:div {:class "sink-zone"
+              :id drop-area-id
+              :on-drop (fn [e]
+                         (. e stopPropagation)
+                         (. e preventDefault)
+                         (let [files (.. e -dataTransfer -files)]
+                           (. js/console log files)))
+              :on-drag-over #(handle-drag-over %)}
+        ;; Icon & caption
+        [:div
+         [:i {:class "fas fa-cloud-upload-alt" :aria-hidden true
+              :style {:font-size "6rem"
+                      :color "#0095F3"}}]]
+        [:p "Drop files here," [:br] "or select files to upload"]
+        ;; Hidden input element
+        [:input {:class "hidden-input"
+                 :id "file-selector"
+                 :type "file"
+                 :name "files[]"
+                 :multiple "Is a dummy text OK...?"
+                 :on-change (fn [e]
+                              (let [files (.. e -target -files)]
+                                (. js/console log files)))}]
+        ;; Default style of input elements is ugly so using a label instead
+        [:label {:for "file-selector"} "Browse files"]]]]
+     [:div {:class "col-sm-2"}]]]])
+
+;; Item list ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn on-item-click [item]
-  (re-frame/dispatch-sync [::events/select-item item])
-  (let [api-url "https://vrcpanorama-get-image.herokuapp.com/index.php"
-        req-url (str api-url "?type=move&page=" (item :sheet-idx))]
-    (go (http/get req-url))))
+  (go (let [a (re-frame/dispatch-sync [::events/select-item item])
+            api-url "https://vrcpanorama-get-image.herokuapp.com/index.php"
+            req-url (str api-url "?type=move&page=" (item :sheet-idx))
+            a (re-frame/dispatch-sync [::events/will-reflect-slide])
+            res (js->clj (<! (http/get req-url)))
+            a (re-frame/dispatch-sync [::events/did-reflect-slide res])]
+        (println "Slide update finished."))))
 
 (defn item-card [item]
   [:li
@@ -35,10 +87,11 @@
   [:ul {:id "item-list"
         :class "wrap-list"}
    (let [items @(re-frame/subscribe [::subs/items])]
+   ;; (let [items (conj [] (@(re-frame/subscribe [::subs/items]) 0))] ; Debug purpose only
      (for [item items]
        ^{:key item} [item-card item]))])
 
-;; Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Items panel ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def gapi-ch (chan))
 
@@ -165,7 +218,7 @@
       [:h5 {:class "card-title"} "今日のTip"]
       [:p {:class "card-text"} (const/random-tip)]]]]])
 
-(defn main-panel []
+(defn items-panel []
   (refresh)
   [:div {:class "container"}
    [tip-card]
@@ -187,4 +240,26 @@
      [dropdown-sort-order]
      "　order"]]
    [item-list]])
+
+;; Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- loading-indicator []
+  (let [r? @(re-frame/subscribe [::subs/reflecting?])]
+    [:div.loading-indicator {:style {:opacity (if r? 1 0)
+                                     :background-color (if r? "#eeeeee" "#22BBFF")}}
+     [:div.vert-wrapper
+      [:div.logo
+       [:div.lds-ring
+        [:div]
+        [:div]
+        [:div]]
+       (if r? "Posting..." "Done!")]]]))
+
+(defn main-panel []
+  [:div
+   [items-panel]
+   ;; [:div
+   ;;  [drop-area]]
+   [loading-indicator]]
+  )
 

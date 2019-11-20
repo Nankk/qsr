@@ -27,3 +27,8 @@
   ::sort-order
   (fn [db _]
     (db :sort-order)))
+
+(re-frame/reg-sub
+  ::reflecting?
+  (fn [db _]
+    (db :reflecting?)))

@@ -56,3 +56,14 @@
       (-> db
           (update :items #(vec (util/shift-from-to % from to)))))))
 
+(re-frame/reg-event-db
+  ::will-reflect-slide
+  (fn [db _]
+    (assoc db :reflecting? true)))
+
+(re-frame/reg-event-db
+  ::did-reflect-slide
+  (fn [db [_ res]]
+    (println "Received response from php API:")
+    (println res)
+    (assoc db :reflecting? false)))

@@ -45,6 +45,19 @@
                          :fields fields})
         cbf callback-fn
         files (. drive -files)]
-    (. files list params cbf))
-  0)
+    (. files list params cbf)))
 
+(defn upload-file [dir-id file callback-fn]
+  (let [name "なんかする"
+        file-metadata (clj->js {:name name})
+        ext "抽出する"
+        filebody "node関数は使えないのでBASE64がどうたらとかあれか？"
+        media (clj->js {:mimeType (str "image/" ext)
+                        :body filebody})
+        params (clj->js {:resource file-metadata
+                         :media media
+                         :fields "id"})]
+    "dir-idについてもなんかする（フィルタ？）"
+    (if (re-matches #"(jpe?g|png|gif)" ext)
+      (. (. drive -files) create params callback-fn)
+      (println (str "upload-files: Unsupported format " ext)))))
