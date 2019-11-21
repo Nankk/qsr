@@ -14,11 +14,6 @@
     (db :items)))
 
 (re-frame/reg-sub
-  ::initialized?
-  (fn [db _]
-    (db :initialized?)))
-
-(re-frame/reg-sub
   ::sort-by
   (fn [db _]
     (db :sort-by)))

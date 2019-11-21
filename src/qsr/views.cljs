@@ -8,7 +8,7 @@
    [clojure.string :as str]
    [qsr.gapis :as gapis]
    [cljs-http.client :as http]
-   [cljs.core.async :as async :refer [chan go go-loop >! <!]]
+   [cljs.core.async :as async :refer [>! <! chan go timeout]]
    [qsr.const :as const]))
 
 ;; File uploader ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -24,7 +24,7 @@
 
 (defn upload-files [files]
   (doseq [file files]
-    (gapis/upload-file "1V86RuISEWxMeg8vIuKz190oBNEJIxNq0" file #())))
+    (gapis/drive-upload "1V86RuISEWxMeg8vIuKz190oBNEJIxNq0" file #())))
 
 (defn drop-area []
   [:div {:class "container"}
@@ -63,12 +63,12 @@
 ;; Item list ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn on-item-click [item]
-  (go (let [a (re-frame/dispatch-sync [::events/select-item item])
+  (go (let [_       (re-frame/dispatch-sync [::events/select-item item])
             api-url "https://vrcpanorama-get-image.herokuapp.com/index.php"
             req-url (str api-url "?type=move&page=" (item :sheet-idx))
-            a (re-frame/dispatch-sync [::events/will-reflect-slide])
-            res (js->clj (<! (http/get req-url)))
-            a (re-frame/dispatch-sync [::events/did-reflect-slide res])]
+            _       (re-frame/dispatch-sync [::events/will-reflect-slide])
+            res     (js->clj (<! (http/get req-url)))
+            _       (re-frame/dispatch-sync [::events/did-reflect-slide res])]
         (println "Slide update finished."))))
 
 (defn item-card [item]
@@ -93,8 +93,6 @@
 
 ;; Items panel ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def gapi-ch (chan))
-
 (defn formatted-sheets-data [vs]
   (let [vs-sub (subvec vs 3)]
     (into [] (map-indexed (fn [i v]
@@ -117,54 +115,30 @@
                (let [idx (first (keep-indexed (fn [i v] (when (= (v :id) (s-v :id)) i)) d-vs))]
                  (assoc s-v :name (get-in d-vs [idx :name])))))))
 
-(go-loop [rs {}]
-  (when-let [r (<! gapi-ch)]
-    (let [new-rs (assoc rs (r :type) (r :content))]
-      (if (and (contains? new-rs :drive)
-               (contains? new-rs :sheets))
-        (do (println "gonna set-items!")
-            (re-frame/dispatch-sync [::events/set-items (items new-rs)])
-            (re-frame/dispatch-sync [::events/initialized])
-            (recur {}))
-        (recur new-rs)))))
-
 (defn refresh []
-  (gapis/get-values-from-sheet
-   "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
-   "Default!A:A"
-   (fn [err res]
-     (when err (throw err))
-     (. js/console log "got values from sheet.")
-     (let [vs (js->clj (.. res -data -values))]
-       (go (>! gapi-ch {:type :sheets :content vs})))))
-  (gapis/get-items-in-directory
-   "1V86RuISEWxMeg8vIuKz190oBNEJIxNq0"
-   1000
-   "files(name, id)"
-   (fn [err res]
-     (when err (throw err))
-     (. js/console log "got items in directory.")
-     (let [vs (js->clj (.. res -data -files))]
-       (go (>! gapi-ch {:type :drive :content vs}))))))
+  (go (let [_      (println "Reading sheet...")
+            s-res  (<! (gapis/sheets-get "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg" "Default!A:A"))
+            s-vs   (js->clj (.. s-res -data -values))
+            _      (println "Reading done.")
+            _      (println "Reading drive...")
+            d-res  (<! (gapis/drive-list "1V86RuISEWxMeg8vIuKz190oBNEJIxNq0" 1000 "files(name, id)"))
+            d-vs   (js->clj (.. d-res -data -files))
+            _      (println "Reading done.")
+            merged {:sheets s-vs :drive d-vs}]
+        (re-frame/dispatch-sync [::events/set-items (items merged)])
+        )))
 
 (defn update-values-in-sheet []
-  (println "Updating sheet...")
-  (let [items @(re-frame/subscribe [::subs/items])]
-    (gapis/update-values-in-sheet
-     "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
-     "Default!A2"
-     [[(count items)]]
-     (fn [err res]
-       (when err (throw err))
-       (println "Slides count updated.")))
-    (gapis/update-values-in-sheet
-     "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
-     (str "Default!A4:A" (+ 3 (count items)))
-     (vec (for [item items]
-            [(str "https://drive.google.com/file/d/" (item :id) "/view?usp=sharing")]))
-     (fn [err res]
-       (when err (throw err))
-       (println "Slides urls updated.")))))
+  (go (println "Updating sheets...")
+      (<! (gapis/sheets-update "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
+                               "Default!A2"
+                               [[(count items)]]))
+      (println "Updated items count in sheets.")
+      (<! (gapis/sheets-update "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
+                               (str "Default!A4:A" (+ 3 (count items)))
+                               (vec (for [item items]
+                                      [(str "https://drive.google.com/file/d/" (item :id) "/view?usp=sharing")]))))
+      (println "Updated urls in sheets.")))
 
 (defn dropdown-sort-by []
   [:span {:class "dropdown"}
@@ -260,6 +234,5 @@
    [items-panel]
    ;; [:div
    ;;  [drop-area]]
-   [loading-indicator]]
-  )
+   [loading-indicator]])
 

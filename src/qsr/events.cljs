@@ -11,11 +11,6 @@
    db/default-db))
 
 (re-frame/reg-event-db
-  ::initialized
-  (fn [db _]
-    (assoc db :initialized? true)))
-
-(re-frame/reg-event-db
  ::select-item
  (fn [db [_ item]]
    (let [items (db :items)
