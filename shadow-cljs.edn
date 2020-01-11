@@ -9,6 +9,7 @@
   [binaryage/devtools "0.9.7"]
   [cljs-http "0.1.46"]
   ;; [org.clojure/core.async "0.4.500"]
+  [garden "1.3.9"]
   ]
 
  :source-paths
