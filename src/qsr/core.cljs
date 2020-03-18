@@ -6,11 +6,11 @@
    [qsr.views :as views]
    [qsr.config :as config]
    ["sortablejs" :as Sortable]
-   [qsr.style :as style]))
+   [qsr.style.core :as style.core]))
 
-(defn- write-css []
-  (let [_        (println (style/css))
-        css-text (style/css)
+(defn- compile-garden []
+  (println "Compiling garden...")
+  (let [css-text (style.core/summarize)
         css-elem (. js/document getElementById "garden")]
     (set! (. css-elem -textContent) css-text)))
 
@@ -33,7 +33,7 @@
                                   (rf/dispatch-sync [::events/on-manually-sorted from-to])))})))
 
 (defn ^:dev/after-load mount-root []
-  (write-css)
+  (compile-garden)
   (rf/clear-subscription-cache!)
   (reagent/render [views/main-panel]
                   (.getElementById js/document "app"))

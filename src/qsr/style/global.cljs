@@ -1,4 +1,4 @@
-(ns qsr.style
+(ns qsr.style.global
   (:require [garden.core :as garden]
             [garden.selectors :as s]))
 
