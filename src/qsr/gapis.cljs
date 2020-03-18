@@ -3,7 +3,7 @@
    ["google-auth-library" :refer (JWT GoogleAuth)]
    ["google-drive" :as google-drive]
    ["google-sheets" :as google-sheets]
-   [re-frame.core :as re-frame]
+   [re-frame.core :as rf]
    [qsr.embedded :as embedded]
    [qsr.subs :as subs]
    [qsr.events :as events]

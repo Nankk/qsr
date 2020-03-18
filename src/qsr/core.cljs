@@ -1,7 +1,7 @@
 (ns qsr.core
   (:require
    [reagent.core :as reagent]
-   [re-frame.core :as re-frame]
+   [re-frame.core :as rf]
    [qsr.events :as events]
    [qsr.views :as views]
    [qsr.config :as config]
@@ -30,17 +30,17 @@
                                 (let [old (. e -oldIndex)
                                       new (. e -newIndex)
                                       from-to [old new]]
-                                  (re-frame/dispatch-sync [::events/on-manually-sorted from-to])))})))
+                                  (rf/dispatch-sync [::events/on-manually-sorted from-to])))})))
 
 (defn ^:dev/after-load mount-root []
   (write-css)
-  (re-frame/clear-subscription-cache!)
+  (rf/clear-subscription-cache!)
   (reagent/render [views/main-panel]
                   (.getElementById js/document "app"))
   (sortable-setup))
 
 (defn init []
-  (re-frame/dispatch-sync [::events/initialize-db])
+  (rf/dispatch-sync [::events/initialize-db])
   (dev-setup)
   (mount-root)
   )

@@ -1,6 +1,6 @@
 (ns qsr.views
   (:require
-   [re-frame.core :as re-frame]
+   [re-frame.core :as rf]
    [reagent.core :as reagent]
    [qsr.subs :as subs]
    [qsr.events :as events]
@@ -63,12 +63,12 @@
 ;; Item list ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn on-item-click [item]
-  (go (let [_       (re-frame/dispatch-sync [::events/select-item item])
+  (go (let [_       (rf/dispatch-sync [::events/select-item item])
             api-url "https://vrcpanorama-get-image.herokuapp.com/index.php"
             req-url (str api-url "?type=move&page=" (item :sheet-idx))
-            _       (re-frame/dispatch-sync [::events/will-reflect-slide])
+            _       (rf/dispatch-sync [::events/will-reflect-slide])
             res     (js->clj (<! (http/get req-url)))
-            _       (re-frame/dispatch-sync [::events/did-reflect-slide res])]
+            _       (rf/dispatch-sync [::events/did-reflect-slide res])]
         (println "Slide update finished."))))
 
 (defn item-card [item]
@@ -86,8 +86,8 @@
 (defn item-list []
   [:ul {:id "item-list"
         :class "wrap-list"}
-   (let [items @(re-frame/subscribe [::subs/items])]
-   ;; (let [items (conj [] (@(re-frame/subscribe [::subs/items]) 0))] ; Debug purpose only
+   (let [items @(rf/subscribe [::subs/items])]
+   ;; (let [items (conj [] (@(rf/subscribe [::subs/items]) 0))] ; Debug purpose only
      (for [item items]
        ^{:key item} [item-card item]))])
 
@@ -125,7 +125,7 @@
             d-vs   (js->clj (.. d-res -data -files))
             _      (println "Reading done.")
             merged {:sheets s-vs :drive d-vs}]
-        (re-frame/dispatch-sync [::events/set-items (items merged)])
+        (rf/dispatch-sync [::events/set-items (items merged)])
         )))
 
 (defn update-values-in-sheet []
@@ -146,15 +146,15 @@
              :data-toggle   "dropdown"
              :aria-haspopup true
              :aria-expanded false}
-    (name @(re-frame/subscribe [::subs/sort-by]))]
+    (name @(rf/subscribe [::subs/sort-by]))]
    [:div {:class           "dropdown-menu"
           :aria-labelledby "dropdown1"}
     (for [by [:sheet-idx :name]]
       [:button {:key      by
                 :class    "dropdown-item"
                 :on-click (fn [_]
-                            (re-frame/dispatch-sync [::events/set-sort-by by])
-                            (re-frame/dispatch-sync [::events/sort-items]))}
+                            (rf/dispatch-sync [::events/set-sort-by by])
+                            (rf/dispatch-sync [::events/sort-items]))}
        (name by)])]])
 
 (defn dropdown-sort-order []
@@ -163,15 +163,15 @@
              :data-toggle   "dropdown"
              :aria-haspopup true
              :aria-expanded false}
-    (name @(re-frame/subscribe [::subs/sort-order]))]
+    (name @(rf/subscribe [::subs/sort-order]))]
    [:div {:class           "dropdown-menu"
           :aria-labelledby "dropdown2"}
     (for [order [:ascending :descending]]
       [:button {:key      order
                 :class    "dropdown-item"
                 :on-click (fn [_]
-                            (re-frame/dispatch-sync [::events/set-sort-order order])
-                            (re-frame/dispatch-sync [::events/sort-items]))}
+                            (rf/dispatch-sync [::events/set-sort-order order])
+                            (rf/dispatch-sync [::events/sort-items]))}
        (name order)])]])
 
 (defn tip-card []
@@ -218,7 +218,7 @@
 ;; Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- loading-indicator []
-  (let [r? @(re-frame/subscribe [::subs/reflecting?])]
+  (let [r? @(rf/subscribe [::subs/reflecting?])]
     [:div.opacity-wrapper {:style {:opacity (if r? 1 0)}}
      [:div.loading-indicator {:style {:background-color (if r? "#eeeeee" "#22BBFF")}}
       [:div.vert-wrapper
@@ -235,4 +235,3 @@
    ;; [:div
    ;;  [drop-area]]
    [loading-indicator]])
-

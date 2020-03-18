@@ -1,29 +1,29 @@
 (ns qsr.subs
   (:require
-   [re-frame.core :as re-frame]
+   [re-frame.core :as rf]
    ))
 
-(re-frame/reg-sub
+(rf/reg-sub
   ::name
   (fn [db _]
     (db :name)))
 
-(re-frame/reg-sub
+(rf/reg-sub
   ::items
   (fn [db _]
     (db :items)))
 
-(re-frame/reg-sub
+(rf/reg-sub
   ::sort-by
   (fn [db _]
     (db :sort-by)))
 
-(re-frame/reg-sub
+(rf/reg-sub
   ::sort-order
   (fn [db _]
     (db :sort-order)))
 
-(re-frame/reg-sub
+(rf/reg-sub
   ::reflecting?
   (fn [db _]
     (db :reflecting?)))
