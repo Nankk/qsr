@@ -5,8 +5,7 @@
 (defn css []
   (garden/css
    ;; Global
-   [:html {:font-size "calc((.4em + 0.5vmin) + (.4em + 0.5vmax))"
-           :color     "#575757"}]
+   [:html {:color "#575757"}]
    [:.container {:padding   "2rem"
                  :max-width "initial"}]
    [:span
