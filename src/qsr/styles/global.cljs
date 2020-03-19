@@ -1,4 +1,4 @@
-(ns qsr.style.global
+(ns qsr.styles.global
   (:require [garden.core :as garden]
             [garden.selectors :as s]))
 
@@ -6,7 +6,7 @@
   (garden/css
    ;; Global
    [:html {:color "#575757"}]
-   [:.container {:padding   "2rem"
+   [:.container {:padding   "0 2rem"
                  :max-width "initial"}]
    [:span
     [:.btn {:margin-right "1rem"}]]

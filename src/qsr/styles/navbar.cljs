@@ -1,8 +1,8 @@
-(ns qsr.style.navbar
+(ns qsr.styles.navbar
   (:require
    [garden.core :as g]
    [garden.selectors :as s]
-   [qsr.style.const :as const]))
+   [qsr.styles.const :as const]))
 
 (defn css []
   (g/css

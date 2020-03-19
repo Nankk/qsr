@@ -1,4 +1,4 @@
-(ns qsr.style.const)
+(ns qsr.styles.const)
 
 (def accent-colors ["#034C8A"
                     "#126297"
