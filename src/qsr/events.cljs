@@ -57,3 +57,9 @@
 (rf/reg-event-db ::toggle-menu-open?
   (fn [db [_ _]]
     (assoc-in db [:menu-open?] (not (db :menu-open?)))))
+
+(rf/reg-event-db ::set-current-page
+  (fn [db [_ k]]
+    (assoc-in db [:current-page] k)))
+
+;;

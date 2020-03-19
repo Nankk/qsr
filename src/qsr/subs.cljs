@@ -26,3 +26,9 @@
 (rf/reg-sub ::menu-open?
   (fn [db [_ _]]
     (get-in db [:menu-open?])))
+
+(rf/reg-sub ::current-page
+  (fn [db [_ _]]
+    (get-in db [:current-page])))
+
+;;

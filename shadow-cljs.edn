@@ -26,4 +26,4 @@
                            :http-port 8700
                            :after-load qsr.core/mount-root
                            :preloads [devtools.preload
-                                      day8.re-frame.trace.preload]}}}}
+                                      day8.re-frame-10x.preload]}}}}

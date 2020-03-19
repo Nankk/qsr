@@ -6,4 +6,5 @@
    :selected-item nil
    :sort-by :sheet-idx
    :sort-order :ascending
+   :current-page :top
    :menu-open? false})
