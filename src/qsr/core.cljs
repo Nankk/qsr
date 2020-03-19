@@ -1,16 +1,17 @@
 (ns qsr.core
   (:require
    [reagent.core :as reagent]
+   [reagent.dom :as reagent.dom]
    [re-frame.core :as rf]
    [qsr.events :as events]
    [qsr.views :as views]
    [qsr.config :as config]
    ["sortablejs" :as Sortable]
-   [qsr.style.core :as style.core]))
+   [qsr.styles.core :as styles.core]))
 
 (defn- compile-garden []
   (println "Compiling garden...")
-  (let [css-text (style.core/summarize)
+  (let [css-text (styles.core/summarize)
         css-elem (. js/document getElementById "garden")]
     (set! (. css-elem -textContent) css-text)))
 
