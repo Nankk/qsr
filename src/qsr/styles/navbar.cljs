@@ -12,7 +12,7 @@
               :display          "inline-block"
               :height           "100%"
               :background-color (const/base-colors 0)
-              :padding          "60px 12px"
+              :padding-top      "60px"
               :top              "0px"
               :position         "sticky"
               :overflow         "auto"}
@@ -81,7 +81,7 @@
      [(s/input (s/attr= :type :checkbox))
       [:&:checked+label>span {:transform "rotate(90deg)"}]]]
     ;; Some cosmetics
-    [:li
+    [:li {:white-space "nowrap"}
      [:a
       [:span {:float "right"}]]]
     ]))
