@@ -6,7 +6,7 @@
   (garden/css
    ;; Global
    [:html {:color "#575757"}]
-   [:.container {:padding   "0 2rem"
+   [:.container {:padding   "32px"
                  :max-width "initial"}]
    [:span
     [:.btn {:margin-right "1rem"}]]

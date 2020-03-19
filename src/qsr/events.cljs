@@ -53,3 +53,7 @@
     (println "Received response from php API:")
     (println res)
     (assoc db :reflecting? false)))
+
+(rf/reg-event-db ::toggle-menu-open?
+  (fn [db [_ _]]
+    (assoc-in db [:menu-open?] (not (db :menu-open?)))))

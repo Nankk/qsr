@@ -9,7 +9,14 @@
    [qsr.gapis :as gapis]
    [cljs-http.client :as http]
    [cljs.core.async :as async :refer [>! <! chan go timeout]]
-   [qsr.const :as const]))
+   [qsr.const :as const]
+   [qsr.components.navbar :as navbar]
+   ["react-split-pane" :as rsp :refer [Pane]]
+   ))
+
+;; Global ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def SplitPane (get (js->clj rsp) "default")) ; why are things going wrong like this
 
 ;; File uploader ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -215,7 +222,29 @@
      "　order"]]
    [item-list]])
 
+(defn- main-container []
+  [:div
+   [items-panel]])
+
 ;; Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- toggle-menu []
+  (let [open? @(rf/subscribe [::subs/menu-open?])
+        el (. js/document querySelector "#app>div>div.SplitPane.vertical.disabled>div.Pane.vertical.Pane1")]
+    (set! (.. el -style -width) (if open? "0px" "230px"))
+    (rf/dispatch-sync [::events/toggle-menu-open?])))
+
+(defn- hamburger-handle []
+  [:div {:style {:top "12px"
+                 :left "32px"
+                 :position "absolute"
+                 :z-index "999"
+                 }}
+   [:a {:href "#"
+        :on-click #(toggle-menu)}
+    [:i {:class "fas fa-bars"
+         :aria-hidden true
+         :style {:font-size "2rem" :color "#aaa"}}]]])
 
 (defn- loading-indicator []
   (let [r? @(rf/subscribe [::subs/reflecting?])]
@@ -231,7 +260,11 @@
 
 (defn main-panel []
   [:div
-   [items-panel]
-   ;; [:div
-   ;;  [drop-area]]
-   [loading-indicator]])
+   [hamburger-handle]
+   [:> SplitPane {:split "vertical" :defaultSize 230 :allowResize false}
+    [:div#navbar [navbar/navbar]]
+    [:div#main-container
+     [main-container]
+     ;; [:div
+     ;;  [drop-area]]
+     [loading-indicator]]]])

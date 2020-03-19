@@ -6,11 +6,13 @@
 
 (defn css []
   (g/css
+   [:#app>div>div.SplitPane.vertical.disabled>div.Pane.vertical.Pane1
+    {:transition "all .3s cubic-bezier(.1, .75, .3, .9)"}]
    [:#navbar {:width            "100%"
               :display          "inline-block"
               :height           "100%"
               :background-color (const/base-colors 0)
-              :padding          "0"
+              :padding          "60px 12px"
               :top              "0px"
               :position         "sticky"
               :overflow         "auto"}
@@ -72,7 +74,7 @@
       ;; somehow this max-height needed (if not parameters list will be truncated)
       [:&:checked+label+ul {:max-height "10000px"}]
       ]]
-    ;; Rotating chevron icon
+    ;; Rotating chevron icon (I dunno which's better [(s/> :a :b)] or [:a>b])
     [(s/> :label :span) {:float      "right"
                          :transition "transform 0.1s ease"}]
     [:.nav__list

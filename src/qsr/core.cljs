@@ -36,8 +36,8 @@
 (defn ^:dev/after-load mount-root []
   (compile-garden)
   (rf/clear-subscription-cache!)
-  (reagent/render [views/main-panel]
-                  (.getElementById js/document "app"))
+  (reagent.dom/render [views/main-panel]
+                      (.getElementById js/document "app"))
   (sortable-setup))
 
 (defn init []

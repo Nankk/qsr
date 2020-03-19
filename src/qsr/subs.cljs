@@ -22,3 +22,7 @@
 (rf/reg-sub ::reflecting?
   (fn [db _]
     (db :reflecting?)))
+
+(rf/reg-sub ::menu-open?
+  (fn [db [_ _]]
+    (get-in db [:menu-open?])))
