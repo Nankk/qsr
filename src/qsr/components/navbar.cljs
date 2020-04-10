@@ -1,10 +1,9 @@
 (ns qsr.components.navbar
   (:require
    [qsr.events :as events]
-   [qsr.subs :as subs]
    [re-frame.core :as rf]))
 
-(defn- navbar []
+(defn navbar []
   [:div
    [:nav.nav {:role "navigation"}
     [:ul.nav__list
