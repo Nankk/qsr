@@ -9,15 +9,25 @@
    [qsr.const :as const]
    ))
 
-;; Item list ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Global
+
+(defn- refresh []
+  (println "refresh")
+  (go (let [json (<! (http/get (str const/server-url "/get-image-list")
+                               {:with-credentials? false}))
+            list            (get-in json [:body :img-list])]
+        (rf/dispatch-sync [::events/update-img-list list]))))
+
+;; Item list
 
 (defn- on-item-click [item]
-  (go (let [_       (rf/dispatch-sync [::events/select-item item])
-            api-url "https://vrcpanorama-get-image.herokuapp.com/index.php"
-            req-url (str api-url "?type=move&page=" (item :sheet-idx))
-            _       (rf/dispatch-sync [::events/will-reflect-slide])
-            res     (js->clj (<! (http/get req-url)))
-            _       (rf/dispatch-sync [::events/did-reflect-slide res])]
+  (println "on-item-click")
+  (go (let [idx (first (keep-indexed #(when (= (%2 :id) (item :id)) %1) @(rf/subscribe [::subs/img-list])))
+            _   (rf/dispatch-sync [::events/will-reflect-slide])
+            _   (<! (http/get (str const/server-url "/select?img_idx=" idx)
+                              {:with-credentials? false}))
+            _   (rf/dispatch-sync [::events/did-reflect-slide])]
+        (refresh)
         (println "Slide update finished."))))
 
 (defn- item-card [item]
@@ -25,22 +35,19 @@
    [:button {:class "transparent" :on-click #(on-item-click item)}
     [:div {:class (str "card hoverable" (when (item :selected?) " selected"))}
      [:img {:data-sizes "auto"
-            :data-src (item :url)
+            :data-src (str const/server-url "/thumb/" (item :id) "." (item :ext))
             :class "card-img-top lazyload"}]
      [:div {:class "card-body"}
-      (str "sheet index: " (item :sheet-idx))
-      [:br]
       (str "name: " (item :name))]]]])
 
 (defn- item-list []
   [:ul {:id "item-list"
         :class "wrap-list"}
-   (let [items @(rf/subscribe [::subs/items])]
-     ;; (let [items (conj [] (@(rf/subscribe [::subs/items]) 0))] ; Debug purpose only
-     (for [item items]
+   (let [img-list @(rf/subscribe [::subs/img-list])]
+     (for [item img-list]
        ^{:key item} [item-card item]))])
 
-;; Items panel ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Items panel
 
 (defn- formatted-sheets-data [vs]
   (let [vs-sub (subvec vs 3)]
@@ -63,19 +70,6 @@
     (into [] (for [s-v s-vs]
                (let [idx (first (keep-indexed (fn [i v] (when (= (v :id) (s-v :id)) i)) d-vs))]
                  (assoc s-v :name (get-in d-vs [idx :name])))))))
-
-(defn- refresh []
-  (go (let [_      (println "Reading sheet...")
-            s-res  (<! (gapis/sheets-get "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg" "Default!A:A"))
-            s-vs   (js->clj (.. s-res -data -values))
-            _      (println "Reading done.")
-            _      (println "Reading drive...")
-            d-res  (<! (gapis/drive-list "1V86RuISEWxMeg8vIuKz190oBNEJIxNq0" 1000 "files(name, id)"))
-            d-vs   (js->clj (.. d-res -data -files))
-            _      (println "Reading done.")
-            merged {:sheets s-vs :drive d-vs}]
-        (rf/dispatch-sync [::events/set-items (items merged)])
-        )))
 
 (defn- update-values-in-sheet []
   (go (println "Updating sheets...")

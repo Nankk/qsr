@@ -7,9 +7,9 @@
   (fn [db _]
     (db :name)))
 
-(rf/reg-sub ::items
+(rf/reg-sub ::img-list
   (fn [db _]
-    (db :items)))
+    (db :img-list)))
 
 (rf/reg-sub ::sort-by
   (fn [db _]
@@ -30,5 +30,13 @@
 (rf/reg-sub ::current-page
   (fn [db [_ _]]
     (get-in db [:current-page])))
+
+(rf/reg-sub ::uploading?
+  (fn [db [_ _]]
+    (get-in db [:uploading?])))
+
+(rf/reg-sub ::upload-queue
+  (fn [db [_ _]]
+    (get-in db [:upload-queue])))
 
 ;;

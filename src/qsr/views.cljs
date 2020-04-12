@@ -1,19 +1,12 @@
 (ns qsr.views
   (:require
    [re-frame.core :as rf]
-   [reagent.core :as reagent]
    [qsr.subs :as subs]
    [qsr.events :as events]
-   [qsr.db :as db]
-   [clojure.string :as str]
-   [qsr.gapis :as gapis]
-   [cljs-http.client :as http]
-   [cljs.core.async :as async :refer [>! <! chan go timeout]]
-   [qsr.const :as const]
    [qsr.components.navbar :as navbar]
    [qsr.components.image-selector :as image-selector]
    [qsr.components.file-uploader :as file-uploader]
-   ["react-split-pane" :as rsp :refer [Pane]]
+   ["react-split-pane" :as rsp]
    ))
 
 ;; Global ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
