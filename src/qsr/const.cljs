@@ -14,4 +14,4 @@
 (def server-url
   (if config/debug?
     "http://localhost:55551"
-    "http://118.27.12.128:55551"))
+    "https://118.27.12.128:55551"))
