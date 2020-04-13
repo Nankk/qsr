@@ -1,8 +1,10 @@
 (ns qsr.views
   (:require
    [re-frame.core :as rf]
+   [reagent.core :as reagent]
    [qsr.subs :as subs]
    [qsr.events :as events]
+   [qsr.common :as common]
    [qsr.components.navbar :as navbar]
    [qsr.components.image-selector :as image-selector]
    [qsr.components.file-uploader :as file-uploader]
@@ -16,10 +18,14 @@
 ;; Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- main-container []
-  (case @(rf/subscribe [::subs/current-page])
-    :image-selector [image-selector/main]
-    :uploader [file-uploader/main]
-    [image-selector/main]))
+  (reagent/create-class
+   {:component-did-update (fn [_]
+                            (when (= @(rf/subscribe [::subs/current-page]) :image-selector)
+                              (common/sortable-setup)))
+    :reagent-render (fn [] (case @(rf/subscribe [::subs/current-page])
+                             :image-selector [image-selector/main]
+                             :uploader [file-uploader/main]
+                             [image-selector/main]))}))
 
 (defn- toggle-menu []
   (let [open? @(rf/subscribe [::subs/menu-open?])

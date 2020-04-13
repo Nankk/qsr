@@ -5,18 +5,8 @@
    [re-frame.core :as rf]
    [cljs.core.async :as async :refer [>! <! chan go timeout]]
    [cljs-http.client :as http]
-   [qsr.gapis :as gapis]
    [qsr.const :as const]
-   ))
-
-;; Global
-
-(defn- refresh []
-  (println "refresh")
-  (go (let [json (<! (http/get (str const/server-url "/get-image-list")
-                               {:with-credentials? false}))
-            list            (get-in json [:body :img-list])]
-        (rf/dispatch-sync [::events/update-img-list list]))))
+   [qsr.common :as common]))
 
 ;; Item list
 
@@ -27,7 +17,7 @@
             _   (<! (http/get (str const/server-url "/select?img_idx=" idx)
                               {:with-credentials? false}))
             _   (rf/dispatch-sync [::events/did-reflect-slide])]
-        (refresh)
+        (common/refresh)
         (println "Slide update finished."))))
 
 (defn- item-card [item]
@@ -35,53 +25,26 @@
    [:button {:class "transparent" :on-click #(on-item-click item)}
     [:div {:class (str "card hoverable" (when (item :selected?) " selected"))}
      [:img {:data-sizes "auto"
-            :data-src (str const/server-url "/thumb/" (item :id) "." (item :ext))
-            :class "card-img-top lazyload"}]
-     [:div {:class "card-body"}
-      (str "name: " (item :name))]]]])
+            :data-src   (str const/server-url "/thumb/" (item :id) "." (item :ext))
+            :class      "card-img-top lazyload"}]
+     [:div.card-body
+      [:div.ellipsis (item :name)]
+      [:div {:style {:text-align "right"
+                     :color      "#bbbbbb"}}
+       [:i.fas.fa-times {:aria-hidden true
+                         :style {:font-size "1rem"}
+                         :on-click (fn [e]
+                                     (. e stopPropagation)
+                                     (rf/dispatch-sync [::events/delete-item (item :id)])
+                                     (common/upload-image-list))}]]]]]])
 
 (defn- item-list []
-  [:ul {:id "item-list"
-        :class "wrap-list"}
+  [:ul#image-list.wrap-ul
    (let [img-list @(rf/subscribe [::subs/img-list])]
      (for [item img-list]
        ^{:key item} [item-card item]))])
 
 ;; Items panel
-
-(defn- formatted-sheets-data [vs]
-  (let [vs-sub (subvec vs 3)]
-    (into [] (map-indexed (fn [i v]
-                            (let [url-raw (first v)
-                                  img-id (second (re-matches #".*file/d/([^/]+).*" url-raw))]
-                              {:id img-id
-                               :sheet-idx i
-                               :url (str "https://drive.google.com/uc?export=view&id=" img-id)}))
-                          vs-sub))))
-
-(defn- formatted-drive-data [vs]
-  (into [] (for [v vs]
-             {:id   (get v "id")
-              :name (get v "name")})))
-
-(defn- items [rs]
-  (let [s-vs (formatted-sheets-data (rs :sheets))
-        d-vs (formatted-drive-data (rs :drive))]
-    (into [] (for [s-v s-vs]
-               (let [idx (first (keep-indexed (fn [i v] (when (= (v :id) (s-v :id)) i)) d-vs))]
-                 (assoc s-v :name (get-in d-vs [idx :name])))))))
-
-(defn- update-values-in-sheet []
-  (go (println "Updating sheets...")
-      (<! (gapis/sheets-update "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
-                               "Default!A2"
-                               [[(count items)]]))
-      (println "Updated items count in sheets.")
-      (<! (gapis/sheets-update "1vkNkO71CfPhft-gRYFkvTwtg23-O75Dyaq0IIiF_-Dg"
-                               (str "Default!A4:A" (+ 3 (count items)))
-                               (vec (for [item items]
-                                      [(str "https://drive.google.com/file/d/" (item :id) "/view?usp=sharing")]))))
-      (println "Updated urls in sheets.")))
 
 (defn- dropdown-sort-by []
   [:span {:class "dropdown"}
@@ -92,12 +55,13 @@
     (name @(rf/subscribe [::subs/sort-by]))]
    [:div {:class           "dropdown-menu"
           :aria-labelledby "dropdown1"}
-    (for [by [:sheet-idx :name]]
+    (for [by [:name]]
       [:button {:key      by
                 :class    "dropdown-item"
                 :on-click (fn [_]
                             (rf/dispatch-sync [::events/set-sort-by by])
-                            (rf/dispatch-sync [::events/sort-items]))}
+                            (rf/dispatch-sync [::events/sort-items])
+                            )}
        (name by)])]])
 
 (defn- dropdown-sort-order []
@@ -136,24 +100,21 @@
       [:p {:class "card-text"} (const/random-tip)]]]]])
 
 (defn main []
-  (refresh)
-  [:div {:class "container"}
-   [tip-card]
-   [:div {:class "card"}
-    [:div {:class "card-body"}
-     [:span
-      [:button {:class "btn btn-primary"
-                :on-click #(refresh)}
-       [:i {:class "fas fa-sync-alt" :aria-hidden true}]
-       "　Reload sheet data"]
-      [:button {:class "btn btn-primary"
-                :on-click #(update-values-in-sheet)}
-       [:i {:class "fas fa-save" :aria-hidden true}]
-       "　Save to sheets"]]]
-    [:div {:class "card-body"}
-     "Sort by　"
-     [dropdown-sort-by]
-     "　in　"
-     [dropdown-sort-order]
-     "　order"]]
-   [item-list]])
+  (common/refresh)
+  [:div
+   [:div {:class "container"}
+    [tip-card]
+    [:div {:class "card"}
+     [:div {:class "card-body"}
+      [:span
+       [:button {:class "btn btn-primary"
+                 :on-click #(common/refresh)}
+        [:i {:class "fas fa-sync-alt" :aria-hidden true}]
+        "　Reload image list"]]]
+     [:div {:class "card-body"}
+      "Sort by　"
+      [dropdown-sort-by]
+      "　in　"
+      [dropdown-sort-order]
+      "　order"]]
+    [:div#item-list [item-list]]]])

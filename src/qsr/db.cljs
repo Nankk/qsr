@@ -4,7 +4,7 @@
   {:img-list []
    :initialized? false
    :selected-item nil
-   :sort-by :sheet-idx
+   :sort-by :name
    :sort-order :ascending
    :current-page :top
    :menu-open? false

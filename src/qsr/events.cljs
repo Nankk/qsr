@@ -83,4 +83,9 @@
   (fn [db [_ _]]
     (assoc db :uploading? false)))
 
+(rf/reg-event-db ::delete-item
+  (fn [db [_ id]]
+    (let [idx (first (keep-indexed #(when (= (%2 :id) id) %1) (db :img-list)))]
+      (update db :img-list #(vec (concat (subvec % 0 idx) (subvec % (inc idx))))))))
+
 ;;
